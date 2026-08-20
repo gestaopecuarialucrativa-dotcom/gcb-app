@@ -87,21 +87,36 @@ function fecharModal(id){gel(id).classList.remove('open');}
 
 /* ── Modalidade compra ── */
 var modC='perna';
-function setModC(m){modC=m;gel('c-mod-perna').classList.toggle('on',m==='perna');gel('c-mod-peso').classList.toggle('on',m==='peso');showEl('c-peso-f',m==='peso');var el=gel('c-valtotal');el.readOnly=m==='peso';el.style.background=m==='peso'?'#f5f5f5':'#fff';calcCompra();}
+function setModC(m){modC=m;gel('c-mod-perna').classList.toggle('on',m==='perna');gel('c-mod-peso').classList.toggle('on',m==='peso');showEl('c-peso-f',m==='peso');var el=gel('c-valtotal');el.readOnly=m==='peso';el.style.background=m==='peso'?'#f5f5f5':'#fff';gel('c-vt-lbl').textContent=m==='peso'?'Valor por cabeça (calculado)':'Valor por cabeça';calcCompra();}
 var modV='perna';
-function setModV(m){modV=m;gel('v-mod-perna').classList.toggle('on',m==='perna');gel('v-mod-peso').classList.toggle('on',m==='peso');showEl('v-peso-f',m==='peso');var el=gel('v-valtotal');el.readOnly=m==='peso';el.style.background=m==='peso'?'#f5f5f5':'#fff';calcVenda();}
+function setModV(m){modV=m;gel('v-mod-perna').classList.toggle('on',m==='perna');gel('v-mod-peso').classList.toggle('on',m==='peso');showEl('v-peso-f',m==='peso');var el=gel('v-valtotal');el.readOnly=m==='peso';el.style.background=m==='peso'?'#f5f5f5':'#fff';gel('v-vt-lbl').textContent=m==='peso'?'Valor por cabeça (calculado)':'Valor por cabeça';calcVenda();}
 
 function calcCompra(){
-  if(modC==='peso'){var arr=n('c-arr'),va=n('c-valarr'),vt=arr*va;v('c-valtotal',vt>0?vt.toFixed(2):'');}
-  var vt2=n('c-valtotal'),fr=n('c-frete'),co=n('c-comissao'),total=vt2+fr+co,cab=n('c-cab');
-  if(total>0){showEl('c-resumo',true);gel('c-r-total').textContent=R$(total);gel('c-r-cab').textContent=cab>0?R$(total/cab)+' por cabeça':'';}
-  else showEl('c-resumo',false);
+  var cab=n('c-cab');
+  // No peso: valor por cabeça = média@ × valor@
+  if(modC==='peso'){var arr=n('c-arr'),va=n('c-valarr'),vpc=arr*va;v('c-valtotal',vpc>0?vpc.toFixed(2):'');}
+  var valorPorCab=n('c-valtotal'),fr=n('c-frete'),co=n('c-comissao');
+  var totalAnimais=valorPorCab*cab;
+  var total=totalAnimais+fr+co;
+  if(total>0&&cab>0){
+    showEl('c-resumo',true);
+    gel('c-r-total').textContent=R$(total);
+    var det=cab+' cab. × '+R$(valorPorCab);
+    if(modC==='peso')det=cab+' cab. × '+n('c-arr')+' @ × '+R$(n('c-valarr'));
+    if(fr+co>0)det+=' + '+R$(fr+co)+' (frete/comissão)';
+    gel('c-r-cab').textContent=det;
+  } else showEl('c-resumo',false);
 }
 function calcVenda(){
-  if(modV==='peso'){var arr=n('v-arr'),va=n('v-valarr'),vt=arr*va;v('v-valtotal',vt>0?vt.toFixed(2):'');}
-  var rec=n('v-valtotal'),fr=n('v-frete'),co=n('v-comissao'),desp=fr+co,liq=rec-desp;
-  if(rec>0){var r=gel('v-resumo');r.style.display='block';r.style.background=liq>=0?'#e8f5e9':'#ffebee';gel('v-r-rec').textContent=R$(rec);gel('v-r-desp').textContent='− '+R$(desp);var le=gel('v-r-liq');le.textContent=R$(liq);le.style.color=liq>=0?'#1B5E20':'#B71C1C';}
-  else showEl('v-resumo',false);
+  var cab=n('v-cab');
+  if(modV==='peso'){var arr=n('v-arr'),va=n('v-valarr'),vpc=arr*va;v('v-valtotal',vpc>0?vpc.toFixed(2):'');}
+  var valorPorCab=n('v-valtotal'),fr=n('v-frete'),co=n('v-comissao');
+  var rec=valorPorCab*cab,desp=fr+co,liq=rec-desp;
+  if(rec>0&&cab>0){
+    var r=gel('v-resumo');r.style.display='block';r.style.background=liq>=0?'#e8f5e9':'#ffebee';
+    gel('v-r-rec').textContent=R$(rec);gel('v-r-desp').textContent='− '+R$(desp);
+    var le=gel('v-r-liq');le.textContent=R$(liq);le.style.color=liq>=0?'#1B5E20':'#B71C1C';
+  } else showEl('v-resumo',false);
 }
 
 /* ── Abrir modais ── */
@@ -133,10 +148,11 @@ function abrirModalVenda(){
 
 /* ── Salvar ── */
 function salvarCompra(){
-  var cab=n('c-cab'),vt=n('c-valtotal'),cat=(gel('c-cat').value||'').trim();
-  if(!cab||!vt||!cat){showEl('err-compra',true);setTimeout(function(){showEl('err-compra',false);},3000);return;}
-  var r={id:Date.now(),dt:gel('c-data').value||TD,forn:(gel('c-forn').value||'').trim(),cat:cat,cab:cab,mod:modC,arr:n('c-arr'),valarr:n('c-valarr'),valtotal:vt,frete:n('c-frete'),comissao:n('c-comissao'),obs:(gel('c-obs').value||'').trim()};
-  r.custoTotal=vt+r.frete+r.comissao;
+  var cab=n('c-cab'),valorPorCab=n('c-valtotal'),cat=(gel('c-cat').value||'').trim();
+  if(!cab||!valorPorCab||!cat){showEl('err-compra',true);setTimeout(function(){showEl('err-compra',false);},3000);return;}
+  var totalAnimais=valorPorCab*cab;
+  var r={id:Date.now(),dt:gel('c-data').value||TD,forn:(gel('c-forn').value||'').trim(),cat:cat,cab:cab,mod:modC,arr:n('c-arr'),valarr:n('c-valarr'),valcab:valorPorCab,valtotal:totalAnimais,frete:n('c-frete'),comissao:n('c-comissao'),obs:(gel('c-obs').value||'').trim()};
+  r.custoTotal=totalAnimais+r.frete+r.comissao;
   // Salva na planilha primeiro
   var dot=gel('sync-dot');dot.className='sdot sy';
   enviarNuvemComConfirm('compra',r,function(ok){
@@ -155,10 +171,11 @@ function salvarCompra(){
   });
 }
 function salvarVenda(){
-  var cab=n('v-cab'),vt=n('v-valtotal'),cat=(gel('v-cat').value||'').trim();
-  if(!cab||!vt||!cat){showEl('err-venda',true);setTimeout(function(){showEl('err-venda',false);},3000);return;}
-  var r={id:Date.now(),dt:gel('v-data').value||TD,comp:(gel('v-comp').value||'').trim(),cat:cat,cab:cab,refugo:n('v-refugo'),mod:modV,arr:n('v-arr'),valarr:n('v-valarr'),valtotal:vt,frete:n('v-frete'),comissao:n('v-comissao'),obs:(gel('v-obs').value||'').trim()};
-  r.recebidoLiq=vt-r.frete-r.comissao;
+  var cab=n('v-cab'),valorPorCab=n('v-valtotal'),cat=(gel('v-cat').value||'').trim();
+  if(!cab||!valorPorCab||!cat){showEl('err-venda',true);setTimeout(function(){showEl('err-venda',false);},3000);return;}
+  var totalAnimais=valorPorCab*cab;
+  var r={id:Date.now(),dt:gel('v-data').value||TD,comp:(gel('v-comp').value||'').trim(),cat:cat,cab:cab,refugo:n('v-refugo'),mod:modV,arr:n('v-arr'),valarr:n('v-valarr'),valcab:valorPorCab,valtotal:totalAnimais,frete:n('v-frete'),comissao:n('v-comissao'),obs:(gel('v-obs').value||'').trim()};
+  r.recebidoLiq=totalAnimais-r.frete-r.comissao;
   var dot=gel('sync-dot');dot.className='sdot sy';
   enviarNuvemComConfirm('venda',r,function(ok){
     if(ok){
@@ -306,20 +323,22 @@ function verDet(tipo,regId){
   if(!r)return;
   _dTipo=tipo;_dId=regId;
   var linhas=tipo==='compra'?[
-    ['Data',fmtD(r.dt)],['Fornecedor',r.forn||'—'],['Cabeças',r.cab],
+    ['Data',fmtD(r.dt)],['Fornecedor',r.forn||'—'],r.cat?['Categoria',r.cat]:null,['Cabeças',r.cab],
     ['Modalidade',r.mod==='peso'?'No Peso':'Na Perna'],
-    r.mod==='peso'?['Arrobas',r.arr+' @']:null,
+    r.mod==='peso'?['Média @/cab',r.arr+' @']:null,
     r.mod==='peso'?['Valor/@',R$(r.valarr)]:null,
-    ['Valor pago',R$(r.valtotal)],['Frete',R$(r.frete)],['Comissão',R$(r.comissao)],
+    ['Valor por cabeça',R$(r.valcab!=null?r.valcab:(r.custoTotal-r.frete-r.comissao)/r.cab)],
+    ['Frete',R$(r.frete)],['Comissão',R$(r.comissao)],
     ['Custo total',R$(r.custoTotal),true],['Custo/cabeça',R$(r.custoTotal/r.cab)],
     r.obs?['Obs.',r.obs]:null
   ]:[
-    ['Data',fmtD(r.dt)],['Comprador',r.comp||'—'],['Cabeças',r.cab],
+    ['Data',fmtD(r.dt)],['Comprador',r.comp||'—'],r.cat?['Categoria',r.cat]:null,['Cabeças',r.cab],
     r.refugo?['Refugo',r.refugo+' cab.']:null,
     ['Modalidade',r.mod==='peso'?'No Peso':'Na Perna'],
-    r.mod==='peso'?['Arrobas',r.arr+' @']:null,
+    r.mod==='peso'?['Média @/cab',r.arr+' @']:null,
     r.mod==='peso'?['Valor/@',R$(r.valarr)]:null,
-    ['Valor recebido',R$(r.valtotal)],['Frete',R$(r.frete)],['Comissão',R$(r.comissao)],
+    ['Valor por cabeça',R$(r.valcab!=null?r.valcab:r.valtotal/r.cab)],
+    ['Frete',R$(r.frete)],['Comissão',R$(r.comissao)],
     ['Líquido recebido',R$(r.recebidoLiq),true],
     r.obs?['Obs.',r.obs]:null
   ];

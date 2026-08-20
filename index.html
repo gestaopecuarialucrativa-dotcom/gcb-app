@@ -471,12 +471,12 @@ input[readonly]{background:#f5f5f5;color:#65766a}
   </div>
   <div id="c-peso-f" style="display:none">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div><div class="lbl">Arrobas totais</div><input type="number" id="c-arr" placeholder="0.0" step="0.5" oninput="calcCompra()"></div>
+      <div><div class="lbl">Média @/cabeça</div><input type="number" id="c-arr" placeholder="0.0" step="0.5" oninput="calcCompra()"></div>
       <div><div class="lbl">Valor/@</div><div class="inp-wrap"><span class="inp-prefix">R$</span><input type="number" id="c-valarr" placeholder="0,00" step="0.01" oninput="calcCompra()"></div></div>
     </div>
   </div>
   <div class="fg" id="c-vt-f">
-    <div class="lbl">Valor total pago</div>
+    <div class="lbl" id="c-vt-lbl">Valor por cabeça</div>
     <div class="inp-wrap"><span class="inp-prefix">R$</span><input type="number" id="c-valtotal" placeholder="0,00" step="0.01" oninput="calcCompra()"></div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
@@ -540,12 +540,12 @@ input[readonly]{background:#f5f5f5;color:#65766a}
   </div>
   <div id="v-peso-f" style="display:none">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div><div class="lbl">Arrobas totais</div><input type="number" id="v-arr" placeholder="0.0" step="0.5" oninput="calcVenda()"></div>
+      <div><div class="lbl">Média @/cabeça</div><input type="number" id="v-arr" placeholder="0.0" step="0.5" oninput="calcVenda()"></div>
       <div><div class="lbl">Valor/@</div><div class="inp-wrap"><span class="inp-prefix">R$</span><input type="number" id="v-valarr" placeholder="0,00" step="0.01" oninput="calcVenda()"></div></div>
     </div>
   </div>
   <div class="fg">
-    <div class="lbl">Valor total recebido</div>
+    <div class="lbl" id="v-vt-lbl">Valor por cabeça</div>
     <div class="inp-wrap"><span class="inp-prefix">R$</span><input type="number" id="v-valtotal" placeholder="0,00" step="0.01" oninput="calcVenda()"></div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
@@ -640,9 +640,7 @@ input[readonly]{background:#f5f5f5;color:#65766a}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     CONFIGURAÇÃO DESTE CLIENTE — troque as 4 linhas para novo cliente
-     ═══════════════════════════════════════════════════════════ -->
+<!-- CONFIGURAÇÃO DESTE CLIENTE — troque as 4 linhas para novo cliente -->
 <script>
 var GCB_CONFIG = {
   cliente: 'raniery',
