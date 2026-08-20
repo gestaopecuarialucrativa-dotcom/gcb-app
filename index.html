@@ -66,6 +66,8 @@ input[readonly]{background:#f5f5f5;color:#65766a}
 .pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700}
 .pill-verde{background:#e8f5e9;color:#2E7D32;border:1px solid #a5d6a7}
 .pill-laranja{background:#fff3e0;color:#E65100;border:1px solid #FFB300}
+.cat-pill{background:#e8f5e9;color:#2E7D32;border:1px solid #a5d6a7;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;user-select:none;transition:all .15s}
+.cat-pill.on{background:#1B5E20;color:#fff;border-color:#1B5E20}
 .pill-azul{background:#e3f2fd;color:#1565C0;border:1px solid #90caf9}
 .pill-cinza{background:#f5f5f5;color:#555;border:1px solid #ddd}
 .pill-roxo{background:#f3e5f5;color:#6A1B9A;border:1px solid #ce93d8}
@@ -440,6 +442,19 @@ input[readonly]{background:#f5f5f5;color:#65766a}
   </div>
   <div class="fg"><div class="lbl">Data</div><input type="date" id="c-data"></div>
   <div class="fg"><div class="lbl">Fornecedor</div><input type="text" id="c-forn" list="dl-pessoas" placeholder="De quem comprou"></div>
+  <div class="fg">
+    <div class="lbl">Categoria <span style="color:#E65100;font-size:10px">obrigatório</span></div>
+    <div id="c-cat-pills" style="display:flex;flex-wrap:wrap;gap:6px">
+      <span class="cat-pill" onclick="selCat('c','Bezerro',this)">Bezerro</span>
+      <span class="cat-pill" onclick="selCat('c','Bezerra',this)">Bezerra</span>
+      <span class="cat-pill" onclick="selCat('c','Garrote',this)">Garrote</span>
+      <span class="cat-pill" onclick="selCat('c','Novilha',this)">Novilha</span>
+      <span class="cat-pill" onclick="selCat('c','Boi',this)">Boi</span>
+      <span class="cat-pill" onclick="selCat('c','Vaca',this)">Vaca</span>
+      <span class="cat-pill" onclick="selCat('c','Touro',this)">Touro</span>
+    </div>
+    <input type="hidden" id="c-cat">
+  </div>
   <div class="fg"><div class="lbl">Cabeças</div><input type="number" id="c-cab" placeholder="0" min="1" step="1" oninput="calcCompra()"></div>
   <div class="fg">
     <div class="lbl">Modalidade</div>
@@ -493,6 +508,19 @@ input[readonly]{background:#f5f5f5;color:#65766a}
   </div>
   <div class="fg"><div class="lbl">Data</div><input type="date" id="v-data"></div>
   <div class="fg"><div class="lbl">Comprador</div><input type="text" id="v-comp" list="dl-pessoas" placeholder="Pra quem vendeu"></div>
+  <div class="fg">
+    <div class="lbl">Categoria <span style="color:#E65100;font-size:10px">obrigatório</span></div>
+    <div id="v-cat-pills" style="display:flex;flex-wrap:wrap;gap:6px">
+      <span class="cat-pill" onclick="selCat('v','Bezerro',this)">Bezerro</span>
+      <span class="cat-pill" onclick="selCat('v','Bezerra',this)">Bezerra</span>
+      <span class="cat-pill" onclick="selCat('v','Garrote',this)">Garrote</span>
+      <span class="cat-pill" onclick="selCat('v','Novilha',this)">Novilha</span>
+      <span class="cat-pill" onclick="selCat('v','Boi',this)">Boi</span>
+      <span class="cat-pill" onclick="selCat('v','Vaca',this)">Vaca</span>
+      <span class="cat-pill" onclick="selCat('v','Touro',this)">Touro</span>
+    </div>
+    <input type="hidden" id="v-cat">
+  </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
     <div><div class="lbl">Cabeças vendidas</div><input type="number" id="v-cab" placeholder="0" min="1" step="1" oninput="calcVenda()"></div>
     <div><div class="lbl">Refugo (recusado)</div><input type="number" id="v-refugo" placeholder="0" min="0" step="1"></div>
@@ -612,12 +640,8 @@ input[readonly]{background:#f5f5f5;color:#65766a}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-
 <!-- ═══════════════════════════════════════════════════════════
-     CONFIGURAÇÃO DESTE CLIENTE
-     Para criar um novo cliente: copie este arquivo, troque as
-     4 linhas abaixo (cliente, nome, pin, cfgGS) e publique.
-     NÃO precisa mexer no app.js.
+     CONFIGURAÇÃO DESTE CLIENTE — troque as 4 linhas para novo cliente
      ═══════════════════════════════════════════════════════════ -->
 <script>
 var GCB_CONFIG = {

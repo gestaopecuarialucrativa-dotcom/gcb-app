@@ -1,25 +1,19 @@
-/* GCB v1.0 — Gestão Catireiro Bovino */
-/* Código comum a todos os clientes. Configuração vem do GCB_CONFIG no index.html */
-if (typeof GCB_CONFIG === 'undefined') {
-  var GCB_CONFIG = { cliente: 'default', nome: '', pin: '1234', pinConsultor: '9999', cfgGS: '' };
-}
-
 
 /* GCB v1.0 — Gestão Catireiro Bovino */
+if(typeof GCB_CONFIG==='undefined'){var GCB_CONFIG={cliente:'default',nome:'Catireiro',pin:'1234',pinConsultor:'9999',cfgGS:'https://script.google.com/macros/s/AKfycbyyLVjylYvjW9HK0tUt4Ugs0eBHRavGRPUprniYDyOsWwBmnZ1PaSmO5KEv99cDvayi7A/exec'};}
+var STORE='gcb_'+(GCB_CONFIG.cliente||'default');
+var TD=new Date().toISOString().split('T')[0];
 
-var STORE = 'gcb_v2';
-var TD = new Date().toISOString().split('T')[0];
-
-var S = {
-  pin: '1234',
-  pinConsultor: '9999',
-  cfgGS: 'https://script.google.com/macros/s/AKfycbyyLVjylYvjW9HK0tUt4Ugs0eBHRavGRPUprniYDyOsWwBmnZ1PaSmO5KEv99cDvayi7A/exec',
-  cfgNome: 'Raniery',
-  compras: [],
-  vendas: [],
-  pessoas: [],
-  mortes: [],
-  isConsultor: false
+var S={
+  pin:GCB_CONFIG.pin||'1234',
+  pinConsultor:GCB_CONFIG.pinConsultor||'9999',
+  cfgGS:GCB_CONFIG.cfgGS||'',
+  cfgNome:GCB_CONFIG.nome||'',
+  compras:[],
+  vendas:[],
+  pessoas:[],
+  mortes:[],
+  isConsultor:false
 };
 
 /* ── Utils ── */
@@ -113,12 +107,14 @@ function calcVenda(){
 /* ── Abrir modais ── */
 /* ── Seleção de categoria (pills) ── */
 function selCat(prefix,cat,el){
-  gel(prefix+'-cat-pills').querySelectorAll('.cat-pill').forEach(function(p){p.classList.remove('on');});
-  el.classList.add('on');
+  var box=gel(prefix+'-cat-pills');
+  if(box)box.querySelectorAll('.cat-pill').forEach(function(p){p.classList.remove('on');});
+  if(el)el.classList.add('on');
   v(prefix+'-cat',cat);
 }
 function limparCatPills(prefix){
-  gel(prefix+'-cat-pills').querySelectorAll('.cat-pill').forEach(function(p){p.classList.remove('on');});
+  var box=gel(prefix+'-cat-pills');
+  if(box)box.querySelectorAll('.cat-pill').forEach(function(p){p.classList.remove('on');});
   v(prefix+'-cat','');
 }
 
