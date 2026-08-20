@@ -1,21 +1,20 @@
 /* GCB v1.0 — Gestão Catireiro Bovino */
-/* Código comum a todos os clientes. A configuração de cada cliente
-   vem do objeto GCB_CONFIG, definido no index.html do cliente.       */
-
-/* Fallback de segurança: se o index.html não definiu GCB_CONFIG,
-   evita erro e usa valores neutros (não deve acontecer em produção). */
+/* Código comum a todos os clientes. Configuração vem do GCB_CONFIG no index.html */
 if (typeof GCB_CONFIG === 'undefined') {
   var GCB_CONFIG = { cliente: 'default', nome: '', pin: '1234', pinConsultor: '9999', cfgGS: '' };
 }
 
-var STORE = 'gcb_' + (GCB_CONFIG.cliente || 'default');
+
+/* GCB v1.0 — Gestão Catireiro Bovino */
+
+var STORE = 'gcb_v2';
 var TD = new Date().toISOString().split('T')[0];
 
 var S = {
-  pin: GCB_CONFIG.pin || '1234',
-  pinConsultor: GCB_CONFIG.pinConsultor || '9999',
-  cfgGS: GCB_CONFIG.cfgGS || '',
-  cfgNome: GCB_CONFIG.nome || '',
+  pin: '1234',
+  pinConsultor: '9999',
+  cfgGS: 'https://script.google.com/macros/s/AKfycbyyLVjylYvjW9HK0tUt4Ugs0eBHRavGRPUprniYDyOsWwBmnZ1PaSmO5KEv99cDvayi7A/exec',
+  cfgNome: 'Raniery',
   compras: [],
   vendas: [],
   pessoas: [],
@@ -112,22 +111,35 @@ function calcVenda(){
 }
 
 /* ── Abrir modais ── */
+/* ── Seleção de categoria (pills) ── */
+function selCat(prefix,cat,el){
+  gel(prefix+'-cat-pills').querySelectorAll('.cat-pill').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  v(prefix+'-cat',cat);
+}
+function limparCatPills(prefix){
+  gel(prefix+'-cat-pills').querySelectorAll('.cat-pill').forEach(function(p){p.classList.remove('on');});
+  v(prefix+'-cat','');
+}
+
 function abrirModalCompra(){
   ['c-data','c-forn','c-cab','c-arr','c-valarr','c-valtotal','c-frete','c-comissao','c-obs'].forEach(function(x){v(x,'');});
   v('c-data',TD);setModC('perna');showEl('c-resumo',false);showEl('ok-compra',false);showEl('err-compra',false);
+  limparCatPills('c');
   atualizarDatalist();abrirModal('modal-compra');
 }
 function abrirModalVenda(){
   ['v-data','v-comp','v-cab','v-refugo','v-arr','v-valarr','v-valtotal','v-frete','v-comissao','v-obs'].forEach(function(x){v(x,'');});
   v('v-data',TD);setModV('perna');showEl('v-resumo',false);showEl('ok-venda',false);showEl('err-venda',false);
+  limparCatPills('v');
   atualizarDatalist();abrirModal('modal-venda');
 }
 
 /* ── Salvar ── */
 function salvarCompra(){
-  var cab=n('c-cab'),vt=n('c-valtotal');
-  if(!cab||!vt){showEl('err-compra',true);setTimeout(function(){showEl('err-compra',false);},3000);return;}
-  var r={id:Date.now(),dt:gel('c-data').value||TD,forn:(gel('c-forn').value||'').trim(),cab:cab,mod:modC,arr:n('c-arr'),valarr:n('c-valarr'),valtotal:vt,frete:n('c-frete'),comissao:n('c-comissao'),obs:(gel('c-obs').value||'').trim()};
+  var cab=n('c-cab'),vt=n('c-valtotal'),cat=(gel('c-cat').value||'').trim();
+  if(!cab||!vt||!cat){showEl('err-compra',true);setTimeout(function(){showEl('err-compra',false);},3000);return;}
+  var r={id:Date.now(),dt:gel('c-data').value||TD,forn:(gel('c-forn').value||'').trim(),cat:cat,cab:cab,mod:modC,arr:n('c-arr'),valarr:n('c-valarr'),valtotal:vt,frete:n('c-frete'),comissao:n('c-comissao'),obs:(gel('c-obs').value||'').trim()};
   r.custoTotal=vt+r.frete+r.comissao;
   // Salva na planilha primeiro
   var dot=gel('sync-dot');dot.className='sdot sy';
@@ -147,9 +159,9 @@ function salvarCompra(){
   });
 }
 function salvarVenda(){
-  var cab=n('v-cab'),vt=n('v-valtotal');
-  if(!cab||!vt){showEl('err-venda',true);setTimeout(function(){showEl('err-venda',false);},3000);return;}
-  var r={id:Date.now(),dt:gel('v-data').value||TD,comp:(gel('v-comp').value||'').trim(),cab:cab,refugo:n('v-refugo'),mod:modV,arr:n('v-arr'),valarr:n('v-valarr'),valtotal:vt,frete:n('v-frete'),comissao:n('v-comissao'),obs:(gel('v-obs').value||'').trim()};
+  var cab=n('v-cab'),vt=n('v-valtotal'),cat=(gel('v-cat').value||'').trim();
+  if(!cab||!vt||!cat){showEl('err-venda',true);setTimeout(function(){showEl('err-venda',false);},3000);return;}
+  var r={id:Date.now(),dt:gel('v-data').value||TD,comp:(gel('v-comp').value||'').trim(),cat:cat,cab:cab,refugo:n('v-refugo'),mod:modV,arr:n('v-arr'),valarr:n('v-valarr'),valtotal:vt,frete:n('v-frete'),comissao:n('v-comissao'),obs:(gel('v-obs').value||'').trim()};
   r.recebidoLiq=vt-r.frete-r.comissao;
   var dot=gel('sync-dot');dot.className='sdot sy';
   enviarNuvemComConfirm('venda',r,function(ok){
@@ -232,11 +244,16 @@ function rHome(){
   var receb=vF.reduce(function(a,r){return a+(r.recebidoLiq||0);},0);
   var cabC=cF.reduce(function(a,r){return a+r.cab;},0);
   var cabV=vF.reduce(function(a,r){return a+r.cab;},0);
-  // Custo Medio Ponderado Movel: usa historico completo como base do custo de saida
-  var totalInvestHist=S.compras.reduce(function(a,r){return a+(r.custoTotal||0);},0);
-  var totalCabHist=S.compras.reduce(function(a,r){return a+r.cab;},0);
-  var cpcMedio=totalCabHist>0?totalInvestHist/totalCabHist:0;
-  var lucro=receb-(cpcMedio*cabV);
+  // Custo Medio Ponderado por Categoria
+  var cmvTotal=vF.reduce(function(a,venda){
+    var cat=venda.cat||'';
+    var comprasCat=S.compras.filter(function(c){return (c.cat||'')===(cat);});
+    var investCat=comprasCat.reduce(function(s,c){return s+(c.custoTotal||0);},0);
+    var cabCat=comprasCat.reduce(function(s,c){return s+c.cab;},0);
+    var cpcCat=cabCat>0?investCat/cabCat:0;
+    return a+(cpcCat*venda.cab);
+  },0);
+  var lucro=receb-cmvTotal;
   var margem=receb>0?(lucro/receb*100).toFixed(1):null;
   gel('d-invest').textContent=R$(invest);gel('d-invest-s').textContent=cF.length+' compra'+(cF.length!==1?'s':'');
   gel('d-receb').textContent=R$(receb);gel('d-receb-s').textContent=vF.length+' venda'+(vF.length!==1?'s':'');
@@ -264,8 +281,10 @@ function rHome(){
         +'<div style="background:'+corDias+';color:#fff;border-radius:8px;padding:5px 13px;font-size:13px;font-weight:800;box-shadow:'+sombraDias+'">'+diasNaFazenda+' dia'+(diasNaFazenda!==1?'s':'')+'</div>'
         +'<span style="font-size:11px;color:#65766a">na fazenda</span>'
         +alertaDias+'</div>';
+      var catPill=c.cat?'<span style="background:#e8f5e9;color:#2E7D32;border:1px solid #a5d6a7;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700;margin-top:3px;display:inline-block">'+c.cat+'</span>':'';
       html+='<div class="neg-row" style="flex-direction:column;align-items:stretch"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div><div class="neg-l">'+(c.forn||'—')+'</div>'
-        +'<div class="neg-s">'+fmtD(c.dt)+' · '+R$(c.custoTotal)+' · '+R$(cpc)+'/cab'+infoMorte+'</div></div>'
+        +'<div class="neg-s">'+fmtD(c.dt)+' · '+R$(c.custoTotal)+' · '+R$(cpc)+'/cab'+infoMorte+'</div>'
+        +(catPill?'<div style="margin-top:3px">'+catPill+'</div>':'')+'</div>'
         +(saldo>0?'<div class="pill pill-verde">'+saldo+' cab.</div>':'<div class="pill pill-verde">vendido</div>')
         +'</div>'+infoDiasRow+'</div>';
     });
@@ -402,11 +421,16 @@ function relResumo(cF,vF,ps){
   var receb=vF.reduce(function(a,r){return a+(r.recebidoLiq||0);},0);
   var cabC=cF.reduce(function(a,r){return a+r.cab;},0);
   var cabV=vF.reduce(function(a,r){return a+r.cab;},0);
-  // Custo Medio Ponderado Movel: usa historico completo
-  var totalInvestHist=S.compras.reduce(function(a,r){return a+(r.custoTotal||0);},0);
-  var totalCabHist=S.compras.reduce(function(a,r){return a+r.cab;},0);
-  var cpcMedio=totalCabHist>0?totalInvestHist/totalCabHist:0;
-  var lucro=receb-(cpcMedio*cabV);
+  // Custo Medio Ponderado por Categoria
+  var cmvTotal=vF.reduce(function(a,venda){
+    var cat=venda.cat||'';
+    var comprasCat=S.compras.filter(function(c){return (c.cat||'')===(cat);});
+    var investCat=comprasCat.reduce(function(s,c){return s+(c.custoTotal||0);},0);
+    var cabCat=comprasCat.reduce(function(s,c){return s+c.cab;},0);
+    var cpcCat=cabCat>0?investCat/cabCat:0;
+    return a+(cpcCat*venda.cab);
+  },0);
+  var lucro=receb-cmvTotal;
   var margem=receb>0?(lucro/receb*100).toFixed(1):'—';
   var corpo='<div class="box">'
     +'<div class="box-r"><span>Total investido (compras)</span><span class="neg" style="font-weight:800">'+R$(invest)+'</span></div>'
