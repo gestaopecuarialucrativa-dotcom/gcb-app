@@ -141,12 +141,11 @@ function abrirModalCompra(){
 }
 function estoquePorCategoria(){
   var saldo={};
-  S.compras.forEach(function(c){var cat=c.cat||'—';saldo[cat]=(saldo[cat]||0)+(c.cab||0);});
-  S.vendas.forEach(function(v){var cat=v.cat||'—';saldo[cat]=(saldo[cat]||0)-(v.cab||0);});
+  S.compras.forEach(function(c){var cat=c.cat||'Sem categoria';saldo[cat]=(saldo[cat]||0)+(c.cab||0);});
+  S.vendas.forEach(function(v){var cat=v.cat||'Sem categoria';saldo[cat]=(saldo[cat]||0)-(v.cab||0);});
   S.mortes.forEach(function(m){
-    // morte é ligada a uma compra; desconta da categoria da compra de origem
     var comp=S.compras.find(function(c){return String(c.id)===String(m.compraId);});
-    if(comp){var cat=comp.cat||'—';saldo[cat]=(saldo[cat]||0)-(m.cab||0);}
+    if(comp){var cat=comp.cat||'Sem categoria';saldo[cat]=(saldo[cat]||0)-(m.cab||0);}
   });
   return saldo;
 }
@@ -155,7 +154,8 @@ function montarPillsVenda(){
   var box=gel('v-cat-pills');if(!box)return;
   box.innerHTML='';
   var temEstoque=false;
-  ['Bezerro','Bezerra','Garrote','Novilha','Boi','Vaca','Touro'].forEach(function(cat){
+  var cats=['Bezerro','Bezerra','Garrote','Novilha','Boi','Vaca','Touro','Sem categoria'];
+  cats.forEach(function(cat){
     if((saldo[cat]||0)>0){
       temEstoque=true;
       var el=document.createElement('span');
