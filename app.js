@@ -139,10 +139,39 @@ function abrirModalCompra(){
   limparCatPills('c');
   atualizarDatalist();abrirModal('modal-compra');
 }
+function estoquePorCategoria(){
+  var saldo={};
+  S.compras.forEach(function(c){var cat=c.cat||'—';saldo[cat]=(saldo[cat]||0)+(c.cab||0);});
+  S.vendas.forEach(function(v){var cat=v.cat||'—';saldo[cat]=(saldo[cat]||0)-(v.cab||0);});
+  S.mortes.forEach(function(m){
+    // morte é ligada a uma compra; desconta da categoria da compra de origem
+    var comp=S.compras.find(function(c){return String(c.id)===String(m.compraId);});
+    if(comp){var cat=comp.cat||'—';saldo[cat]=(saldo[cat]||0)-(m.cab||0);}
+  });
+  return saldo;
+}
+function montarPillsVenda(){
+  var saldo=estoquePorCategoria();
+  var box=gel('v-cat-pills');if(!box)return;
+  box.innerHTML='';
+  var temEstoque=false;
+  ['Bezerro','Bezerra','Garrote','Novilha','Boi','Vaca','Touro'].forEach(function(cat){
+    if((saldo[cat]||0)>0){
+      temEstoque=true;
+      var el=document.createElement('span');
+      el.className='cat-pill';
+      el.textContent=cat+' ('+saldo[cat]+')';
+      el.onclick=function(){selCat('v',cat,this);};
+      box.appendChild(el);
+    }
+  });
+  showEl('v-cat-vazio',!temEstoque);
+}
+
 function abrirModalVenda(){
   ['v-data','v-comp','v-cab','v-refugo','v-arr','v-valarr','v-valtotal','v-frete','v-comissao','v-obs'].forEach(function(x){v(x,'');});
   v('v-data',TD);setModV('perna');showEl('v-resumo',false);showEl('ok-venda',false);showEl('err-venda',false);
-  limparCatPills('v');
+  limparCatPills('v');montarPillsVenda();
   atualizarDatalist();abrirModal('modal-venda');
 }
 
@@ -173,6 +202,12 @@ function salvarCompra(){
 function salvarVenda(){
   var cab=n('v-cab'),valorPorCab=n('v-valtotal'),cat=(gel('v-cat').value||'').trim();
   if(!cab||!valorPorCab||!cat){showEl('err-venda',true);setTimeout(function(){showEl('err-venda',false);},3000);return;}
+  // Validar saldo da categoria em estoque
+  var saldoCat=estoquePorCategoria()[cat]||0;
+  if(cab>saldoCat){
+    toast('Você só tem '+saldoCat+' '+cat+' em estoque. Não dá pra vender '+cab+'.',3500);
+    return;
+  }
   var totalAnimais=valorPorCab*cab;
   var r={id:Date.now(),dt:gel('v-data').value||TD,comp:(gel('v-comp').value||'').trim(),cat:cat,cab:cab,refugo:n('v-refugo'),mod:modV,arr:n('v-arr'),valarr:n('v-valarr'),valcab:valorPorCab,valtotal:totalAnimais,frete:n('v-frete'),comissao:n('v-comissao'),obs:(gel('v-obs').value||'').trim()};
   r.recebidoLiq=totalAnimais-r.frete-r.comissao;
