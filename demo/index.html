@@ -510,15 +510,8 @@ input[readonly]{background:#f5f5f5;color:#65766a}
   <div class="fg"><div class="lbl">Comprador</div><input type="text" id="v-comp" list="dl-pessoas" placeholder="Pra quem vendeu"></div>
   <div class="fg">
     <div class="lbl">Categoria <span style="color:#E65100;font-size:10px">obrigatório</span></div>
-    <div id="v-cat-pills" style="display:flex;flex-wrap:wrap;gap:6px">
-      <span class="cat-pill" onclick="selCat('v','Bezerro',this)">Bezerro</span>
-      <span class="cat-pill" onclick="selCat('v','Bezerra',this)">Bezerra</span>
-      <span class="cat-pill" onclick="selCat('v','Garrote',this)">Garrote</span>
-      <span class="cat-pill" onclick="selCat('v','Novilha',this)">Novilha</span>
-      <span class="cat-pill" onclick="selCat('v','Boi',this)">Boi</span>
-      <span class="cat-pill" onclick="selCat('v','Vaca',this)">Vaca</span>
-      <span class="cat-pill" onclick="selCat('v','Touro',this)">Touro</span>
-    </div>
+    <div id="v-cat-pills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    <div id="v-cat-vazio" style="display:none;font-size:11px;color:#E65100;margin-top:4px">Sem gado em estoque para vender.</div>
     <input type="hidden" id="v-cat">
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
@@ -645,9 +638,9 @@ input[readonly]{background:#f5f5f5;color:#65766a}
 var GCB_CONFIG = {
   cliente: 'demo',
   nome: 'Demo',
-  pin: '0000',
+  pin: '1111',
   pinConsultor: '9999',
-  cfgGS: 'https://script.google.com/macros/s/AKfycbySaf5bdriBtZDbUKDL5-PS25eJcViAcvv9kvoNf17a9uRNDmMyFoWUUwjlDXRleymo/exec'
+  cfgGS: 'https://script.google.com/macros/s/AKfycbxYhNVE6EsACifbhtc-C4guCd9H6wKH-buAHXgN2ZV7gs7pBWL0Am_fXaSWBzoCm_ds/exec'
 };
 </script>
 <script src="../app.js"></script>
