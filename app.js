@@ -13,12 +13,13 @@ var S={
   vendas:[],
   pessoas:[],
   mortes:[],
+  comissoes:[],
   isConsultor:false
 };
 
 /* ── Utils ── */
-function salvarLocal(){try{var d=JSON.parse(localStorage.getItem(STORE)||'{}');Object.assign(d,{pin:S.pin,pinConsultor:S.pinConsultor,cfgGS:S.cfgGS,cfgNome:S.cfgNome,compras:S.compras,vendas:S.vendas,pessoas:S.pessoas,mortes:S.mortes});localStorage.setItem(STORE,JSON.stringify(d));}catch(e){}}
-function carregarLocal(){try{var d=JSON.parse(localStorage.getItem(STORE)||'{}');if(d.pin)S.pin=d.pin;if(d.pinConsultor)S.pinConsultor=d.pinConsultor;if(d.cfgGS)S.cfgGS=d.cfgGS;if(d.cfgNome)S.cfgNome=d.cfgNome;if(d.compras)S.compras=d.compras;if(d.vendas)S.vendas=d.vendas;if(d.pessoas)S.pessoas=d.pessoas;if(d.mortes)S.mortes=d.mortes;}catch(e){}}
+function salvarLocal(){try{var d=JSON.parse(localStorage.getItem(STORE)||'{}');Object.assign(d,{pin:S.pin,pinConsultor:S.pinConsultor,cfgGS:S.cfgGS,cfgNome:S.cfgNome,compras:S.compras,vendas:S.vendas,pessoas:S.pessoas,mortes:S.mortes,comissoes:S.comissoes});localStorage.setItem(STORE,JSON.stringify(d));}catch(e){}}
+function carregarLocal(){try{var d=JSON.parse(localStorage.getItem(STORE)||'{}');if(d.pin)S.pin=d.pin;if(d.pinConsultor)S.pinConsultor=d.pinConsultor;if(d.cfgGS)S.cfgGS=d.cfgGS;if(d.cfgNome)S.cfgNome=d.cfgNome;if(d.compras)S.compras=d.compras;if(d.vendas)S.vendas=d.vendas;if(d.pessoas)S.pessoas=d.pessoas;if(d.mortes)S.mortes=d.mortes;if(d.comissoes)S.comissoes=d.comissoes;}catch(e){}}
 function R$(v){return'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtD(iso){if(!iso)return'—';var p=String(iso).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function n(id){return parseFloat(document.getElementById(id).value)||0;}
@@ -66,19 +67,21 @@ function iniciarApp(){
 var tabAtual='home';
 function goTab(t){
   tabAtual=t;
-  ['home','compras','vendas','relatorio','cfg'].forEach(function(x){
+  ['home','compras','vendas','comissao','relatorio','cfg'].forEach(function(x){
     gel('tab-'+x).classList.toggle('on',x===t);
     gel('pg-'+x).classList.toggle('on',x===t);
   });
-  var titulos={home:'Painel',compras:'Compras',vendas:'Vendas',relatorio:'Relatório',cfg:'Configurações'};
+  var titulos={home:'Painel',compras:'Compras',vendas:'Vendas',comissao:'Comissão',relatorio:'Relatório',cfg:'Configurações'};
   gel('hdr-title').textContent=titulos[t]||'GCB';
   // FABs
-  var fc=gel('fab-c'),fv=gel('fab-v');
+  var fc=gel('fab-c'),fv=gel('fab-v'),fcom=gel('fab-com');
   if(fc){fc.classList.toggle('vis',t==='compras');}
   if(fv){fv.classList.toggle('vis',t==='vendas');}
+  if(fcom){fcom.classList.toggle('vis',t==='comissao');}
   if(t==='home')rHome();
   if(t==='compras')rCompras();
   if(t==='vendas')rVendas();
+  if(t==='comissao')rComissoes();
 }
 
 /* ── Modais ── */
@@ -131,6 +134,35 @@ function limparCatPills(prefix){
   var box=gel(prefix+'-cat-pills');
   if(box)box.querySelectorAll('.cat-pill').forEach(function(p){p.classList.remove('on');});
   v(prefix+'-cat','');
+}
+
+/* ── COMISSÃO ── */
+function calcComissao(){
+  var cab=n('com-cab'),vpc=n('com-vpc'),total=cab*vpc;
+  if(total>0){showEl('com-resumo',true);gel('com-r-total').textContent=R$(total);}
+  else showEl('com-resumo',false);
+}
+function abrirModalComissao(){
+  ['com-data','com-de','com-cab','com-vpc','com-obs'].forEach(function(x){v(x,'');});
+  v('com-data',TD);showEl('com-resumo',false);showEl('ok-comissao',false);showEl('err-comissao',false);
+  abrirModal('modal-comissao');
+}
+function salvarComissao(){
+  var cab=n('com-cab'),vpc=n('com-vpc');
+  if(!cab||!vpc){showEl('err-comissao',true);setTimeout(function(){showEl('err-comissao',false);},3000);return;}
+  var r={id:Date.now(),dt:gel('com-data').value||TD,de:(gel('com-de').value||'').trim(),cab:cab,vpc:vpc,total:cab*vpc,obs:(gel('com-obs').value||'').trim()};
+  S.comissoes.unshift(r);salvarLocal();
+  showEl('ok-comissao',true);
+  setTimeout(function(){fecharModal('modal-comissao');rComissoes();rHome();},1400);
+}
+function rComissoes(){
+  var lista=gel('lista-comissoes');if(!lista)return;
+  if(!S.comissoes||!S.comissoes.length){lista.innerHTML='<p style="text-align:center;color:#65766a;font-size:13px;margin-top:40px">Nenhuma comissão registrada</p>';return;}
+  lista.innerHTML=S.comissoes.map(function(c){
+    return'<div class="neg-row"><div><div class="neg-l">'+(c.de||'—')+'</div>'
+      +'<div class="neg-s">'+fmtD(c.dt)+' · '+c.cab+' cab. × '+R$(c.vpc)+'/cab</div></div>'
+      +'<div class="neg-v" style="color:#1B5E20">'+R$(c.total)+'</div></div>';
+  }).join('');
 }
 
 function abrirModalCompra(){
@@ -288,8 +320,10 @@ function rHome(){
   var f=getFiltro();
   var cF=S.compras.filter(function(r){var d=new Date(r.dt+'T00:00:00');return d>=f.de&&d<=f.ate;});
   var vF=S.vendas.filter(function(r){var d=new Date(r.dt+'T00:00:00');return d>=f.de&&d<=f.ate;});
+  var comF=(S.comissoes||[]).filter(function(r){var d=new Date(r.dt+'T00:00:00');return d>=f.de&&d<=f.ate;});
   var invest=cF.reduce(function(a,r){return a+(r.custoTotal||0);},0);
   var receb=vF.reduce(function(a,r){return a+(r.recebidoLiq||0);},0);
+  var totalComissoes=comF.reduce(function(a,r){return a+(r.total||0);},0);
   var cabC=cF.reduce(function(a,r){return a+r.cab;},0);
   var cabV=vF.reduce(function(a,r){return a+r.cab;},0);
   // Custo Medio Ponderado por Categoria
@@ -301,8 +335,8 @@ function rHome(){
     var cpcCat=cabCat>0?investCat/cabCat:0;
     return a+(cpcCat*venda.cab);
   },0);
-  var lucro=receb-cmvTotal;
-  var margem=receb>0?(lucro/receb*100).toFixed(1):null;
+  var lucro=(receb+totalComissoes)-cmvTotal;
+  var margem=(receb+totalComissoes)>0?(lucro/(receb+totalComissoes)*100).toFixed(1):null;
   gel('d-invest').textContent=R$(invest);gel('d-invest-s').textContent=cF.length+' compra'+(cF.length!==1?'s':'');
   gel('d-receb').textContent=R$(receb);gel('d-receb-s').textContent=vF.length+' venda'+(vF.length!==1?'s':'');
   gel('d-lucro').textContent=R$(lucro);gel('d-margem').textContent=margem?'Margem: '+margem+'%':'Margem: —';
@@ -342,12 +376,15 @@ function rHome(){
   var ult=[];
   S.compras.slice(0,4).forEach(function(r){ult.push({dt:r.dt,tipo:'C',label:(r.forn||'—')+' — '+r.cab+' cab.',val:'-'+R$(r.custoTotal)});});
   S.vendas.slice(0,4).forEach(function(r){ult.push({dt:r.dt,tipo:'V',label:(r.comp||'—')+' — '+r.cab+' cab.',val:R$(r.recebidoLiq)});});
+  (S.comissoes||[]).slice(0,4).forEach(function(r){ult.push({dt:r.dt,tipo:'K',label:(r.de||'—')+' — '+r.cab+' cab.',val:R$(r.total)});});
   ult.sort(function(a,b){return String(b.dt).localeCompare(String(a.dt));});ult=ult.slice(0,6);
   if(!ult.length){gel('d-ultimas').innerHTML=emptyHtml('Sem movimentações','');return;}
   gel('d-ultimas').innerHTML=ult.map(function(r){
-    var isV=r.tipo==='V';
-    var pillStyle=isV?'class="pill pill-verde" style="font-size:10px"':'style="font-size:10px;background:#eef1f4;color:#5a6b7a;border-radius:20px;padding:2px 8px;font-weight:700"';
-    return'<div class="neg-row"><div><div style="display:flex;align-items:center;gap:5px"><span '+pillStyle+'>'+(isV?'Venda':'Compra')+'</span><span class="neg-l">'+r.label+'</span></div><div class="neg-s">'+fmtD(r.dt)+'</div></div><div class="neg-v" style="color:'+(isV?'#1B5E20':'#1a2c1a')+'">'+r.val+'</div></div>';
+    var isV=r.tipo==='V';var isK=r.tipo==='K';
+    var pillStyle=isV?'class="pill pill-verde" style="font-size:10px"':isK?'style="font-size:10px;background:#e8f0fe;color:#1a73e8;border-radius:20px;padding:2px 8px;font-weight:700"':'style="font-size:10px;background:#eef1f4;color:#5a6b7a;border-radius:20px;padding:2px 8px;font-weight:700"';
+    var pillLabel=isV?'Venda':isK?'Comissão':'Compra';
+    var valColor=isV?'#1B5E20':isK?'#1a73e8':'#1a2c1a';
+    return'<div class="neg-row"><div><div style="display:flex;align-items:center;gap:5px"><span '+pillStyle+'>'+pillLabel+'</span><span class="neg-l">'+r.label+'</span></div><div class="neg-s">'+fmtD(r.dt)+'</div></div><div class="neg-v" style="color:'+valColor+'">'+r.val+'</div></div>';
   }).join('');
 }
 
@@ -786,7 +823,7 @@ function syncNuvem(cb){
 
 /* ── Boot ── */
 carregarLocal();
-['modal-compra','modal-venda','modal-det','modal-morte'].forEach(function(mid){
+['modal-compra','modal-venda','modal-det','modal-morte','modal-comissao'].forEach(function(mid){
   var el=gel(mid);if(el)el.addEventListener('click',function(e){if(e.target===el)fecharModal(mid);});
 });
 var fc=gel('fab-c');if(fc)fc.classList.add('vis');
