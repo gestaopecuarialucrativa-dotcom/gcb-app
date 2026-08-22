@@ -227,6 +227,10 @@ input[readonly]{background:#f5f5f5;color:#65766a}
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
     Vendas
   </div>
+  <div class="tab" id="tab-comissao" onclick="goTab('comissao')">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/><path d="M8 12h4"/></svg>
+    Comissão
+  </div>
   <div class="tab" id="tab-relatorio" onclick="goTab('relatorio')">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     Relatório
@@ -320,6 +324,45 @@ input[readonly]{background:#f5f5f5;color:#65766a}
 </div>
 
 <!-- RELATÓRIO -->
+<!-- COMISSÃO -->
+<div class="pg" id="pg-comissao">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:700;color:#1B5E20">Comissões recebidas</div>
+  </div>
+  <div id="lista-comissoes"><p style="text-align:center;color:#65766a;font-size:13px;margin-top:40px">Nenhuma comissão registrada</p></div>
+  <button class="fab" id="fab-com" onclick="abrirModalComissao()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+</div>
+
+<!-- MODAL COMISSÃO -->
+<div class="modal" id="modal-comissao">
+  <div class="modal-box">
+    <div class="modal-tit">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B5E20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      Registrar Comissão
+      <span class="modal-close" onclick="fecharModal('modal-comissao')">&times;</span>
+    </div>
+    <div class="fg"><div class="lbl">Data</div><input type="date" id="com-data"></div>
+    <div class="fg"><div class="lbl">De quem recebeu</div><input type="text" id="com-de" list="dl-pessoas" placeholder="Dono do gado ou comprador"></div>
+    <div class="fg"><div class="lbl">Cabeças intermediadas</div><input type="number" id="com-cab" placeholder="0" min="1" step="1" oninput="calcComissao()"></div>
+    <div class="fg"><div class="lbl">Valor por cabeça</div><div class="inp-wrap"><span class="inp-prefix">R$</span><input type="number" id="com-vpc" placeholder="0,00" step="0.01" oninput="calcComissao()"></div></div>
+    <div class="fg"><div class="lbl">Observação</div><input type="text" id="com-obs" placeholder="Ex: intermediação lote Francisco"></div>
+    <div id="com-resumo" class="resumo-box" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#65766a">Total da comissão</span>
+        <span id="com-r-total" style="font-size:17px;font-weight:900;color:#1B5E20">R$ 0</span>
+      </div>
+    </div>
+    <div id="ok-comissao" class="ok-msg" style="display:none">✓ Comissão registrada!</div>
+    <div id="err-comissao" class="err-msg" style="display:none">Preencha cabeças e valor por cabeça.</div>
+    <button class="sbtn" onclick="salvarComissao()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Salvar comissão
+    </button>
+  </div>
+</div>
+
 <div class="pg" id="pg-relatorio">
   <div class="card">
     <div style="font-size:14px;font-weight:800;color:#1B5E20;margin-bottom:14px">Tipo de relatório</div>
@@ -510,15 +553,8 @@ input[readonly]{background:#f5f5f5;color:#65766a}
   <div class="fg"><div class="lbl">Comprador</div><input type="text" id="v-comp" list="dl-pessoas" placeholder="Pra quem vendeu"></div>
   <div class="fg">
     <div class="lbl">Categoria <span style="color:#E65100;font-size:10px">obrigatório</span></div>
-    <div id="v-cat-pills" style="display:flex;flex-wrap:wrap;gap:6px">
-      <span class="cat-pill" onclick="selCat('v','Bezerro',this)">Bezerro</span>
-      <span class="cat-pill" onclick="selCat('v','Bezerra',this)">Bezerra</span>
-      <span class="cat-pill" onclick="selCat('v','Garrote',this)">Garrote</span>
-      <span class="cat-pill" onclick="selCat('v','Novilha',this)">Novilha</span>
-      <span class="cat-pill" onclick="selCat('v','Boi',this)">Boi</span>
-      <span class="cat-pill" onclick="selCat('v','Vaca',this)">Vaca</span>
-      <span class="cat-pill" onclick="selCat('v','Touro',this)">Touro</span>
-    </div>
+    <div id="v-cat-pills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    <div id="v-cat-vazio" style="display:none;font-size:11px;color:#E65100;margin-top:4px">Sem gado em estoque para vender.</div>
     <input type="hidden" id="v-cat">
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
@@ -640,11 +676,7 @@ input[readonly]{background:#f5f5f5;color:#65766a}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     CONFIGURAÇÃO DO CLIENTE: RANIERY
-     Para criar novo cliente: copie esta pasta, troque as 4 linhas
-     abaixo (cliente, nome, pin, cfgGS). NÃO mexe no app.js.
-     ═══════════════════════════════════════════════════════════ -->
+<!-- CONFIGURAÇÃO: RANIERY -->
 <script>
 var GCB_CONFIG = {
   cliente: 'raniery',
@@ -657,4 +689,3 @@ var GCB_CONFIG = {
 <script src="../app.js"></script>
 </body>
 </html>
-
