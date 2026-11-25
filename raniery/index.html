@@ -3,158 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#1B5E20">
+<meta name="theme-color" content="#123d1d">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>GCB — Gestão Catireiro Bovino</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,'Segoe UI',Roboto,system-ui,sans-serif;font-size:14px;background:#eef2ec;color:#1b2c1b;max-width:480px;margin:0 auto;min-height:100vh}
-
-/* TOPBAR */
-.hdr{background:linear-gradient(135deg,#1B5E20,#2E7D32);padding:0 14px;height:54px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.22)}
-.htxt{color:#fff;flex:1;min-width:0}
-.htxt .t1{font-size:9px;opacity:.7;letter-spacing:.3px}
-.htxt .t2{font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sdot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;cursor:pointer}
-.sdot.on{background:#4CAF50;box-shadow:0 0 5px #4CAF50}
-.sdot.sy{background:#FFB300;animation:pl .8s infinite}
-.sdot.off{background:#ccc}
-@keyframes pl{0%,100%{opacity:1}50%{opacity:.3}}
-.hbadge{background:rgba(255,255,255,.2);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;border:1px solid rgba(255,255,255,.3)}
-
-/* ABAS */
-.tabs{display:flex;border-bottom:2px solid #d8e4d8;background:#fff;position:sticky;top:54px;z-index:99;overflow-x:auto}
-.tab{flex:1;padding:8px 4px 7px;text-align:center;cursor:pointer;border-bottom:3px solid transparent;color:#65766a;white-space:nowrap;min-width:56px;margin-bottom:-2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;transition:color .15s}
-.tab svg{opacity:.7}
-.tab.on{color:#2E7D32;border-bottom-color:#2E7D32;font-weight:800;background:#eef2ec;border-radius:8px 8px 0 0}
-.tab.on svg{opacity:1}
-
-/* PAGES */
-.pg{padding:14px;display:none}
-.pg.on{display:block}
-
-/* CARDS */
-.card{background:#fff;border:1px solid #e0e7e0;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 5px rgba(0,0,0,.05)}
-.card-linha{background:#fff;border:1px solid #e0e7e0;border-left:4px solid #2E7D32;border-radius:0 14px 14px 0;padding:13px;margin-bottom:10px;cursor:pointer;transition:background .1s}
-.card-linha:active{background:#f0f9e8}
-
-/* CAMPOS */
-.lbl{font-size:11px;color:#65766a;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;gap:5px}
-.fg{margin-bottom:12px}
-input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:10px 12px;border:1.5px solid #d0dcd0;border-radius:10px;background:#fff;color:#1b2c1b;font-size:14px;font-family:inherit;-webkit-appearance:none;appearance:none}
-input:focus,select:focus,textarea:focus{outline:2px solid #2E7D32;border-color:#2E7D32}
-input[readonly]{background:#f5f5f5;color:#65766a}
-
-/* TOGGLE MODALIDADE */
-.tgbar{display:flex;background:#eef2ec;border-radius:10px;padding:3px;margin-bottom:12px}
-.tgo{flex:1;padding:9px 4px;text-align:center;font-size:13px;cursor:pointer;border-radius:8px;color:#65766a;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
-.tgo.on{background:#fff;color:#1B5E20;box-shadow:0 1px 4px rgba(0,0,0,.10)}
-
-/* BOTÕES */
-.sbtn{width:100%;padding:13px;border-radius:12px;background:#4CAF50;border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
-.sbtn:active{background:#388E3C;transform:scale(.98)}
-.xbtn{width:100%;padding:11px;border-radius:10px;background:#f5f5f5;border:1.5px solid #d0dcd0;color:#1b2c1b;font-size:13px;cursor:pointer;font-weight:700;font-family:inherit;margin-top:5px}
-.xbtn:active{background:#e8e8e8}
-.xbtn-danger{background:#fff;border-color:#ef9a9a;color:#B71C1C}
-
-/* OK / ERRO */
-.ok-msg{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;color:#1B5E20;padding:12px;font-size:13px;text-align:center;display:none;margin-top:10px;font-weight:700}
-.err-msg{background:#ffebee;border:1px solid #ef9a9a;border-radius:10px;color:#b71c1c;padding:12px;font-size:13px;text-align:center;display:none;margin-top:10px;font-weight:700}
-
-/* PILLS */
-.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700}
-.pill-verde{background:#e8f5e9;color:#2E7D32;border:1px solid #a5d6a7}
-.pill-laranja{background:#fff3e0;color:#E65100;border:1px solid #FFB300}
-.cat-pill{background:#e8f5e9;color:#2E7D32;border:1px solid #a5d6a7;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;user-select:none;transition:all .15s}
-.cat-pill.on{background:#1B5E20;color:#fff;border-color:#1B5E20}
-.pill-azul{background:#e3f2fd;color:#1565C0;border:1px solid #90caf9}
-.pill-cinza{background:#f5f5f5;color:#555;border:1px solid #ddd}
-.pill-roxo{background:#f3e5f5;color:#6A1B9A;border:1px solid #ce93d8}
-
-/* DASH */
-.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.dash-card{background:#fff;border:0.5px solid #e0e7e0;border-radius:12px;padding:10px 12px}
-.dc-hd{display:flex;align-items:center;gap:6px;margin-bottom:2px}
-.dc-l{font-size:10px;color:#65766a;font-weight:500}
-.dc-v{font-size:16px;font-weight:800;color:#1a2c1a}
-.dc-s{font-size:10px;color:#a0aaa0;margin-top:1px}
-
-/* LISTA NEGÓCIOS */
-.neg-row{display:flex;align-items:flex-start;justify-content:space-between;padding:11px 0;border-bottom:1px solid #eef2ec}
-.neg-row:last-child{border-bottom:none}
-.neg-l{font-size:13px;font-weight:700;color:#1b2c1b}
-.neg-s{font-size:11px;color:#65766a;margin-top:2px;line-height:1.5}
-.neg-v{font-size:14px;font-weight:800;color:#2E7D32;white-space:nowrap;margin-left:8px;flex-shrink:0}
-.neg-v.neg{color:#B71C1C}
-
-/* EMPTY */
-.empty{text-align:center;padding:32px 20px;color:#65766a}
-.empty-t{font-size:14px;font-weight:700;margin-bottom:4px}
-.empty-s{font-size:12px;line-height:1.5}
-
-/* FAB */
-.fab{position:fixed;bottom:22px;right:18px;width:54px;height:54px;border-radius:27px;background:#4CAF50;border:none;color:#fff;box-shadow:0 4px 16px rgba(76,175,80,.45);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:90;transition:transform .15s}
-.fab.vis{display:flex}
-.fab:active{transform:scale(.92)}
-@media(min-width:480px){.fab{right:calc(50% - 222px)}}
-
-/* MODAL */
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.55);z-index:9000;align-items:flex-end;justify-content:center}
-.modal.open{display:flex}
-.modal-box{background:#fff;width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:22px 18px 32px;max-height:92vh;overflow-y:auto}
-.modal-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 18px}
-.modal-tit{font-size:16px;font-weight:900;color:#1B5E20;margin-bottom:18px;display:flex;align-items:center;gap:8px}
-.modal-close{margin-left:auto;cursor:pointer;color:#aaa;font-size:26px;line-height:1;padding:0 4px}
-
-/* LOGIN */
-.login-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#eef2ec,#d8e8d8)}
-.login-card{background:#fff;border-radius:20px;padding:26px 22px;width:100%;max-width:340px;box-shadow:0 6px 24px rgba(0,0,0,.12);text-align:center}
-.pin-dots{display:flex;gap:14px;justify-content:center;margin:14px 0}
-.pin-dot{width:20px;height:20px;border-radius:50%;border:2px solid #d0dcd0;background:#fff;transition:all .15s}
-.pin-dot.f{background:#2E7D32;border-color:#2E7D32}
-.pin-dot.e{background:#C62828;border-color:#C62828;animation:sh .3s}
-@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.pin-kb{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
-.pk{height:58px;border-radius:12px;background:#f5f5f5;border:1.5px solid #e0e7e0;font-size:22px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1b2c1b;transition:all .1s;font-family:inherit}
-.pk:active{background:#e0e7e0;transform:scale(.95)}
-.pk.del{font-size:16px;background:#fff}
-.pk.emp{background:transparent;border:none;cursor:default}
-.pin-err{text-align:center;color:#C62828;font-size:12px;margin-top:8px;min-height:18px;font-weight:700}
-.pin-mode{font-size:12px;color:#65766a;margin-top:10px;cursor:pointer;text-decoration:underline}
-
-/* RELATORIO PILLS SELECTOR */
-.rel-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.rel-pill{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #d0dcd0;background:#fff;color:#65766a;font-family:inherit}
-.rel-pill.on{background:#1B5E20;color:#fff;border-color:#1B5E20}
-
-/* CONFIG ROW */
-.cfg-s{font-size:11px;color:#65766a;margin-top:2px}
-
-/* INP PREFIX */
-.inp-wrap{position:relative}
-.inp-prefix{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;color:#65766a;font-weight:700;pointer-events:none}
-.inp-wrap input{padding-left:28px}
-
-/* PDF */
-#pdf-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:9500;flex-direction:column}
-#pdf-overlay.open{display:flex}
-#pdf-bar{background:#1B5E20;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-#pdf-titulo{color:#fff;font-weight:900;font-size:14px}
-#pdf-frame{flex:1;width:100%;border:none;background:#fff}
-
-/* TOAST */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:11px 24px;border-radius:24px;font-size:13px;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap}
-.toast.show{opacity:1}
-
-/* BUSCA */
-.busca-wrap{position:relative;margin-bottom:12px}
-.busca-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#65766a}
-.busca-wrap input{padding-left:36px}
-
-/* CONSULTOR BADGE */
-.consultor-bar{background:linear-gradient(90deg,#4A148C,#6A1B9A);color:#fff;font-size:11px;font-weight:700;text-align:center;padding:5px;letter-spacing:.5px}
-</style>
+<link rel="stylesheet" href="../gcb.css?v=2">
 </head>
 <body>
 
@@ -205,12 +58,15 @@ input[readonly]{background:#f5f5f5;color:#65766a}
 
 <!-- TOPBAR -->
 <div class="hdr">
-  <img src="data:image/png;base64,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" style="height:30px;width:auto;object-fit:contain;filter:brightness(0) invert(1);flex-shrink:0" alt="GCB">
+  <div class="hrow">
+    <img id="hdr-logo" class="hlogo" alt="Gestão Pecuária Lucrativa">
+    <div id="sync-dot" class="sdot off" title="Status nuvem" onclick="syncNuvem()"></div>
+  </div>
   <div class="htxt">
-    <div class="t1">GESTÃO CATIREIRO BOVINO</div>
+    <div class="t1" id="hdr-sub">Compra e venda de gado</div>
     <div class="t2" id="hdr-title">Painel</div>
   </div>
-  <div id="sync-dot" class="sdot off" title="Status nuvem" onclick="syncNuvem()"></div>
+</div>
 </div>
 
 <!-- ABAS -->
@@ -243,45 +99,26 @@ input[readonly]{background:#f5f5f5;color:#65766a}
 
 <!-- PAINEL -->
 <div class="pg on" id="pg-home">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-    <div style="font-size:13px;font-weight:700;color:#65766a">Período</div>
-    <select id="home-per" onchange="rHome()" style="width:auto;padding:5px 10px;font-size:12px;border-radius:8px;border:1.5px solid #d0dcd0;background:#fff">
-      <option value="mes">Mês atual</option>
-      <option value="30">30 dias</option>
-      <option value="ano">Este ano</option>
-      <option value="tudo">Tudo</option>
-    </select>
-  </div>
-  <div class="dash-grid">
-    <div class="dash-card">
-      <div class="dc-hd"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#65766a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 3 4-8 2 5h6"/></svg><span class="dc-l">Investido</span></div>
-      <div class="dc-v" id="d-invest">R$ 0</div>
-      <div class="dc-s" id="d-invest-s">0 compras</div>
+  <div class="card">
+    <div class="ch">Resultado
+      <select id="home-per" onchange="rHome()" style="width:auto;padding:5px 10px;font-size:12px;border-radius:20px;font-weight:700;color:var(--vm)">
+        <option value="mes">Mês atual</option>
+        <option value="30">30 dias</option>
+        <option value="ano">Este ano</option>
+        <option value="tudo">Tudo</option>
+      </select>
     </div>
-    <div class="dash-card">
-      <div class="dc-hd"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M5 20h14"/></svg><span class="dc-l">Recebido</span></div>
-      <div class="dc-v" id="d-receb" style="color:#1B5E20">R$ 0</div>
-      <div class="dc-s" id="d-receb-s">0 vendas</div>
-    </div>
-    <div class="dash-card">
-      <div class="dc-hd"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6 4 3 6-8"/><path d="M15 7h4v4"/></svg><span class="dc-l">Lucro líquido</span></div>
-      <div class="dc-v" id="d-lucro" style="color:#1B5E20">R$ 0</div>
-      <div class="dc-s" id="d-margem">Margem: —</div>
-    </div>
-    <div class="dash-card">
-      <div class="dc-hd"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FF6F00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6c-1 .3-1.6 1.3-1 2.2M19 6c1 .3 1.6 1.3 1 2.2"/><path d="M6.5 8.2C5.9 10 6 12 7.2 13.5c1.1 1.4 2.8 2.1 4.8 2.1s3.7-.7 4.8-2.1c1.2-1.5 1.2-3.5.5-5.3"/><path d="M9 13.6c.3 1.2 1.5 2.1 3 2.1s2.7-.9 3-2.1"/><circle cx="10" cy="11" r=".6" fill="#FF6F00" stroke="none"/><circle cx="14" cy="11" r=".6" fill="#FF6F00" stroke="none"/></svg><span class="dc-l">Estoque</span></div>
-      <div class="dc-v" id="d-emao-kpi" style="color:#1B5E20">0 cab.</div>
-      <div class="dc-s">em mão</div>
+    <div class="res-v" id="d-lucro">R$ 0</div>
+    <div class="res-s" id="d-margem">Margem: —</div>
+    <div class="kgrid">
+      <div class="kc"><b id="d-invest">R$ 0</b><span>investido · <i id="d-invest-s" style="font-style:normal">0 compras</i></span></div>
+      <div class="kc"><b id="d-receb">R$ 0</b><span>recebido · <i id="d-receb-s" style="font-style:normal">0 vendas</i></span></div>
     </div>
   </div>
   <div class="card">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1B5E20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6c-1 .3-1.6 1.3-1 2.2M19 6c1 .3 1.6 1.3 1 2.2"/><path d="M6.5 8.2C5.9 10 6 12 7.2 13.5c1.1 1.4 2.8 2.1 4.8 2.1s3.7-.7 4.8-2.1c1.2-1.5 1.2-3.5.5-5.3"/><path d="M9 13.6c.3 1.2 1.5 2.1 3 2.1s2.7-.9 3-2.1"/><circle cx="10" cy="11" r=".6" fill="#1B5E20" stroke="none"/><circle cx="14" cy="11" r=".6" fill="#1B5E20" stroke="none"/></svg>
-      <span style="font-size:13px;font-weight:800;color:#1B5E20">Estoque</span>
-      <span class="pill pill-verde" id="d-emao-pill">0 cab.</span>
-    </div>
+    <div class="ch">Gado em mão <span class="pill pill-verde" id="d-emao-pill">0 cab.</span><span id="d-emao-kpi" style="display:none"></span></div>
     <div id="d-emao-lista"></div>
-    <button class="xbtn" style="margin-top:10px;border-color:#FF6F00;color:#E65100;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalMorte()">
+    <button class="xbtn" style="margin-top:10px;border-color:var(--wa);color:var(--wa);display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalMorte()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E65100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       Registrar baixa por morte
     </button>
@@ -686,6 +523,6 @@ var GCB_CONFIG = {
   cfgGS: 'https://script.google.com/macros/s/AKfycbyyLVjylYvjW9HK0tUt4Ugs0eBHRavGRPUprniYDyOsWwBmnZ1PaSmO5KEv99cDvayi7A/exec'
 };
 </script>
-<script src="../app.js"></script>
+<script src="../app.js?v=2"></script>
 </body>
 </html>
