@@ -46,7 +46,13 @@ function checkPin(){
 function logout(){S.isConsultor=false;gel('app-screen').style.display='none';gel('login-screen').style.display='block';pinReset();_modoConsultor=false;gel('login-modo-label').textContent='PIN de acesso';gel('pin-mode-btn').textContent='Entrar como consultor';}
 
 /* ── App init ── */
+function topoLogo(){
+  var h=gel('hdr-logo'),l=document.querySelector('.login-card img');
+  if(h&&l&&!h.src)h.src=l.src;
+  var sub=gel('hdr-sub');if(sub)sub.textContent=(S.cfgNome?S.cfgNome+' · ':'')+'compra e venda de gado';
+}
 function iniciarApp(){
+  topoLogo();
   showEl('consultor-bar',S.isConsultor);
   showEl('card-conexao',S.isConsultor);
   showEl('card-pins',S.isConsultor);
@@ -58,7 +64,7 @@ function iniciarApp(){
   if(S.cfgGS){
     toast('Atualizando...',2000);
     syncNuvem(function(){
-      rHome();rCompras();rVendas();rPessoas();atualizarDatalist();
+      rHome();rCompras();rVendas();rPessoas();atualizarDatalist();topoLogo();
     });
     if(S.isConsultor) carregarAcessos();
   }
@@ -181,6 +187,20 @@ function estoquePorCategoria(){
     if(comp){var cat=comp.cat||'Sem categoria';saldo[cat]=(saldo[cat]||0)-(m.cab||0);}
   });
   return saldo;
+}
+function saldoPorCompra(){
+  var porCat={},vendCat={},res={};
+  S.compras.forEach(function(c){var k=c.cat||'Sem categoria';(porCat[k]=porCat[k]||[]).push(c);});
+  S.vendas.forEach(function(v){var k=v.cat||'Sem categoria';vendCat[k]=(vendCat[k]||0)+(v.cab||0);});
+  Object.keys(porCat).forEach(function(k){
+    var resta=vendCat[k]||0;
+    porCat[k].slice().sort(function(a,b){return String(a.dt).localeCompare(String(b.dt))||(a.id-b.id);}).forEach(function(c){
+      var mortas=S.mortes.filter(function(m){return String(m.compraId)===String(c.id);}).reduce(function(a,m){return a+(m.cab||0);},0);
+      var disp=Math.max(0,(c.cab||0)-mortas), usa=Math.min(disp,resta); resta-=usa;
+      res[c.id]={saldo:disp-usa,mortas:mortas};
+    });
+  });
+  return res;
 }
 function montarPillsVenda(){
   var saldo=estoquePorCategoria();
@@ -343,7 +363,7 @@ function rHome(){
   var margem=(receb+totalComissoes)>0?(lucro/(receb+totalComissoes)*100).toFixed(1):null;
   gel('d-invest').textContent=R$(invest);gel('d-invest-s').textContent=cF.length+' compra'+(cF.length!==1?'s':'');
   gel('d-receb').textContent=R$(receb);gel('d-receb-s').textContent=vF.length+' venda'+(vF.length!==1?'s':'');
-  gel('d-lucro').textContent=R$(lucro);gel('d-margem').textContent=(margem?'Margem: '+margem+'%':'Margem: —')+(prejMortes>0?' · mortes −'+R$(prejMortes):'');
+  gel('d-lucro').textContent=R$(lucro);gel('d-lucro').style.color=lucro<0?'var(--er)':'';gel('d-margem').textContent=(margem?'Margem: '+String(margem).replace('.',',')+'%':'Margem: —')+(prejMortes>0?' · mortes −'+R$(prejMortes):'');
   // Gado em mão (descontando mortes)
   var totC=S.compras.reduce(function(a,r){return a+r.cab;},0);
   var totV=S.vendas.reduce(function(a,r){return a+r.cab;},0);
@@ -351,30 +371,17 @@ function rHome(){
   var emMao=Math.max(0,totC-totV-totM);
   gel('d-emao-pill').textContent=emMao+' cab.';
   gel('d-emao-kpi').textContent=emMao+' cab.';
-  if(totC>0){
-    var html='';
-    S.compras.slice(0,5).forEach(function(c){
-      var mortesLote=S.mortes.filter(function(m){return m.compraId===c.id;}).reduce(function(a,m){return a+(m.cab||0);},0);
-      var vendLote=Math.min(c.cab,totV);totV=Math.max(0,totV-c.cab);
-      var saldo=Math.max(0,c.cab-vendLote-mortesLote);
-      var cpc=c.cab>0?c.custoTotal/c.cab:0;
-      var infoMorte=mortesLote>0?'<span style="color:#E65100;font-size:11px"> · '+mortesLote+' mort'+((mortesLote>1)?'es':'e')+'</span>':'';
-      var diasNaFazenda=Math.floor((new Date()-new Date(c.dt+'T00:00:00'))/(1000*60*60*24));
-      var corDias=diasNaFazenda>30?'#E65100':'#1B5E20';
-      var sombraDias=diasNaFazenda>30?'0 2px 5px rgba(230,81,0,.3)':'0 2px 5px rgba(27,94,32,.22)';
-      var alertaDias=diasNaFazenda>30?'<span style="font-size:10px;background:#fff3e0;color:#b34e00;padding:2px 7px;border-radius:8px;font-weight:700;margin-left:4px">⚠ parado</span>':'';
-      var infoDiasRow='<div style="display:flex;align-items:center;gap:8px;border-top:1px solid #eef2ec;padding-top:8px;margin-top:6px">'
-        +'<div style="background:'+corDias+';color:#fff;border-radius:8px;padding:5px 13px;font-size:13px;font-weight:800;box-shadow:'+sombraDias+'">'+diasNaFazenda+' dia'+(diasNaFazenda!==1?'s':'')+'</div>'
-        +'<span style="font-size:11px;color:#65766a">na fazenda</span>'
-        +alertaDias+'</div>';
-      var catPill=c.cat?'<span style="background:#e8f5e9;color:#2E7D32;border:1px solid #a5d6a7;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700;margin-top:3px;display:inline-block">'+c.cat+'</span>':'';
-      html+='<div class="neg-row" style="flex-direction:column;align-items:stretch"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div><div class="neg-l">'+(c.forn||'—')+'</div>'
-        +'<div class="neg-s">'+fmtD(c.dt)+' · '+R$(c.custoTotal)+' · '+R$(cpc)+'/cab'+infoMorte+'</div>'
-        +(catPill?'<div style="margin-top:3px">'+catPill+'</div>':'')+'</div>'
-        +(saldo>0?'<div class="pill pill-verde">'+saldo+' cab.</div>':'<div class="pill pill-verde">vendido</div>')
-        +'</div>'+infoDiasRow+'</div>';
-    });
-    gel('d-emao-lista').innerHTML=html;
+  var SP=saldoPorCompra();
+  var emEst=S.compras.filter(function(c){return SP[c.id]&&SP[c.id].saldo>0;});
+  if(emEst.length){
+    gel('d-emao-lista').innerHTML=emEst.map(function(c){
+      var sp=SP[c.id], cpc=c.cab>0?c.custoTotal/c.cab:0;
+      var dias=Math.floor((new Date()-new Date(c.dt+'T00:00:00'))/(1000*60*60*24));
+      var parado=dias>30;
+      return '<div class="est-row"><div style="min-width:0"><div class="n">'+(c.forn||'—')+(c.cat?' · '+c.cat:'')+'</div>'
+        +'<div class="s">'+fmtD(c.dt).slice(0,5)+' · '+R$(cpc).replace(',00','')+'/cab · '+dias+' dia'+(dias!==1?'s':'')+(sp.mortas?' · '+sp.mortas+' morte'+(sp.mortas>1?'s':''):'')+'</div></div>'
+        +'<span class="pill '+(parado?'pill-laranja':'pill-verde')+'">'+sp.saldo+' cab.'+(parado?' · parado':'')+'</span></div>';
+    }).join('');
   } else gel('d-emao-lista').innerHTML=emptyHtml('Nenhum gado em mão','');
   // Últimas
   var ult=[];
@@ -497,14 +504,24 @@ function gerarRelatorio(){
 
 /* ── HTML base PDF ── */
 function pdfBase(titulo,periodoStr,corpo){
-  var nome=S.cfgNome||'Raniery';
+  var nome=S.cfgNome||'';
   var hoje=new Date().toLocaleDateString('pt-BR');
-  return'<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;font-size:13px;color:#1b2c1b;margin:0;padding:20px}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px}th{background:#1B5E20;color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:700}td{padding:7px 10px;border-bottom:1px solid #eef2ec}tr:nth-child(even) td{background:#f9fdf9}.box{background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:10px;padding:14px;margin-bottom:16px}.box-r{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px}.tit{color:#1B5E20;font-size:15px;font-weight:900}.neg{color:#B71C1C}@media print{body{padding:10px}}</style></head><body>'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #1B5E20;padding-bottom:12px;margin-bottom:16px">'
-    +'<div><div class="tit">GCB — Gestão Catireiro Bovino</div><div style="font-size:12px;color:#65766a">'+nome+'</div><div style="font-size:11px;color:#aaa">Emitido em '+hoje+'</div></div>'
-    +'<div style="text-align:right"><div style="font-size:20px;font-weight:900;color:#1B5E20">'+titulo+'</div><div style="font-size:12px;color:#65766a">'+periodoStr+'</div></div></div>'
-    +corpo
-    +'<div style="font-size:10px;color:#bbb;text-align:center;margin-top:20px;border-top:1px solid #eee;padding-top:10px">GCB — Gestão Catireiro Bovino</div></body></html>';
+  var l=document.querySelector('.login-card img'), logo=l?l.src:'';
+  return'<!doctype html><html><head><meta charset="utf-8"><title>'+titulo.charAt(0)+titulo.slice(1).toLowerCase()+(nome?' '+nome:'')+' '+hoje.replace(/\//g,'-')+'</title><style>'
+    +'@page{size:A4 portrait;margin:12mm 13mm 14mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;color:#16261a;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:18px}@media print{body{padding:0}}'
+    +'.hd{display:flex;justify-content:space-between;align-items:center;padding-bottom:3.5mm;border-bottom:2px solid #1f6b33}.hd img{height:10mm}.hd span{font-size:8.5pt;color:#6b7b6f;letter-spacing:1px;text-transform:uppercase;text-align:right}'
+    +'.ey{font-size:8.5pt;font-weight:800;color:#1f6b33;letter-spacing:2px;margin:6mm 0 1mm;text-transform:uppercase}.tt{font-size:19pt;font-weight:800;margin-bottom:4mm}'
+    +'.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:3.5mm;margin-bottom:2mm}.kp div{background:#f3f6f2;border-radius:3mm;padding:3.5mm 4mm}.kp b{display:block;font-size:14pt;color:#123d1d}.kp span{font-size:8pt;color:#6b7b6f}'
+    +'.g,.sec{font-size:8.5pt;font-weight:800;color:#1f6b33;letter-spacing:1.5px;margin:6mm 0 2mm;text-transform:uppercase}'
+    +'table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:2mm}th{text-align:left;font-size:7.5pt;color:#6b7b6f;font-weight:700;padding:1.5mm 1mm;border-bottom:2px solid #1f6b33;text-transform:uppercase;background:none}td{padding:1.9mm 1mm;border-bottom:1px solid #eef1ed}'
+    +'.box{background:#f3f6f2;border-radius:3mm;padding:4mm 5mm;margin:4mm 0}.box-r{display:flex;justify-content:space-between;padding:1.2mm 0;font-size:10pt}.neg{color:#B71C1C}.tit{color:#123d1d}'
+    +'.rod{margin-top:8mm;padding-top:2.5mm;border-top:1px solid #e3e8e2;display:flex;justify-content:space-between;font-size:7.5pt;color:#8a978d}'
+    +'</style></head><body>'
+    +'<div class="hd">'+(logo?'<img src="'+logo+'">':'<b>Gestão Pecuária Lucrativa</b>')+'<span>'+titulo+(nome?'<br>'+nome:'')+'</span></div>'
+    +'<div class="ey">'+periodoStr+' · emitido em '+hoje+'</div>'
+    +'<div class="tt">'+titulo.charAt(0)+titulo.slice(1).toLowerCase()+'</div>'
+    +corpo.replace(/<div style="font-weight:800;color:#1B5E20;margin-bottom:8px">/g,'<div class="sec">')
+    +'<div class="rod"><span>Compra e venda de gado · gestaopecuarialucrativa.com.br</span><span>Rogério · Consultor GPL · (63) 99108-2453</span></div></body></html>';
 }
 
 function relResumo(cF,vF,ps){
@@ -523,14 +540,11 @@ function relResumo(cF,vF,ps){
   },0);
   var lucro=receb-cmvTotal;
   var margem=receb>0?(lucro/receb*100).toFixed(1):'—';
-  var corpo='<div class="box">'
-    +'<div class="box-r"><span>Total investido (compras)</span><span class="neg" style="font-weight:800">'+R$(invest)+'</span></div>'
-    +'<div class="box-r"><span>Cabeças compradas</span><span>'+cabC+'</span></div>'
-    +'<div class="box-r"><span>Total recebido (vendas)</span><span style="font-weight:800">'+R$(receb)+'</span></div>'
-    +'<div class="box-r"><span>Cabeças vendidas</span><span>'+cabV+'</span></div>'
-    +'<div style="border-top:1.5px solid #a5d6a7;margin:10px 0"></div>'
-    +'<div class="box-r"><span style="font-weight:800">Lucro líquido</span><span style="font-size:20px;font-weight:900;color:#1B5E20">'+R$(lucro)+'</span></div>'
-    +'<div class="box-r"><span>Margem</span><span style="font-weight:700">'+margem+'%</span></div></div>'
+  var corpo='<div class="kp">'
+    +'<div><span>Lucro líquido</span><b style="color:'+(lucro<0?'#B71C1C':'#123d1d')+'">'+R$(lucro)+'</b></div>'
+    +'<div><span>Margem</span><b>'+String(margem).replace('.',',')+'%</b></div>'
+    +'<div><span>Investido · '+cabC+' cab.</span><b>'+R$(invest)+'</b></div>'
+    +'<div><span>Recebido · '+cabV+' cab.</span><b>'+R$(receb)+'</b></div></div>'
     +(cF.length?'<div style="font-weight:800;color:#1B5E20;margin-bottom:8px">Compras ('+cF.length+')</div><table><thead><tr><th>Data</th><th>Fornecedor</th><th>Cab.</th><th>Modalidade</th><th>Custo total</th></tr></thead><tbody>'+cF.map(function(r){return'<tr><td>'+fmtD(r.dt)+'</td><td>'+(r.forn||'—')+'</td><td>'+r.cab+'</td><td>'+(r.mod==='peso'?r.arr+' @':'Na Perna')+'</td><td>'+R$(r.custoTotal)+'</td></tr>';}).join('')+'</tbody></table>':'')
     +(vF.length?'<div style="font-weight:800;color:#1B5E20;margin-bottom:8px">Vendas ('+vF.length+')</div><table><thead><tr><th>Data</th><th>Comprador</th><th>Cab.</th><th>Refugo</th><th>Recebido liq.</th></tr></thead><tbody>'+vF.map(function(r){return'<tr><td>'+fmtD(r.dt)+'</td><td>'+(r.comp||'—')+'</td><td>'+r.cab+'</td><td>'+(r.refugo||'—')+'</td><td>'+R$(r.recebidoLiq)+'</td></tr>';}).join('')+'</tbody></table>':'');
   return pdfBase('RESUMO',ps,corpo);
@@ -616,11 +630,9 @@ function abrirModalMorte(){
   // Popula select com compras que têm saldo em mão
   var sel=gel('m-compra');
   sel.innerHTML='<option value="">Selecione a compra...</option>';
-  var vendR=S.vendas.reduce(function(a,r){return a+(r.cab||0);},0);
+  var SP=saldoPorCompra();
   S.compras.forEach(function(c){
-    var mortesLote=S.mortes.filter(function(m){return m.compraId===c.id;}).reduce(function(a,m){return a+(m.cab||0);},0);
-    var consumido=Math.min(c.cab,vendR);vendR=Math.max(0,vendR-c.cab);
-    var saldo=Math.max(0,c.cab-consumido-mortesLote);
+    var saldo=SP[c.id]?SP[c.id].saldo:0;
     if(saldo>0){
       var cpc=c.cab>0?(c.custoTotal/c.cab):0;
       var opt=document.createElement('option');
