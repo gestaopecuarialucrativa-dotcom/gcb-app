@@ -2,7 +2,8 @@
 /* GCB v1.0 — Gestão Catireiro Bovino */
 if(typeof GCB_CONFIG==='undefined'){var GCB_CONFIG={cliente:'default',nome:'Catireiro',pin:'1234',pinConsultor:'9999',cfgGS:'https://script.google.com/macros/s/AKfycbyyLVjylYvjW9HK0tUt4Ugs0eBHRavGRPUprniYDyOsWwBmnZ1PaSmO5KEv99cDvayi7A/exec'};}
 var STORE='gcb_'+(GCB_CONFIG.cliente||'default');
-var TD=new Date().toISOString().split('T')[0];
+function tdHoje(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+var TD=tdHoje();
 
 var S={
   pin:GCB_CONFIG.pin||'1234',
@@ -144,7 +145,7 @@ function calcComissao(){
 }
 function abrirModalComissao(){
   ['com-data','com-de','com-cab','com-vpc','com-obs'].forEach(function(x){v(x,'');});
-  v('com-data',TD);showEl('com-resumo',false);showEl('ok-comissao',false);showEl('err-comissao',false);
+  TD=tdHoje();v('com-data',TD);showEl('com-resumo',false);showEl('ok-comissao',false);showEl('err-comissao',false);
   abrirModal('modal-comissao');
 }
 function salvarComissao(){
@@ -167,7 +168,7 @@ function rComissoes(){
 
 function abrirModalCompra(){
   ['c-data','c-forn','c-cab','c-arr','c-valarr','c-valtotal','c-frete','c-comissao','c-obs'].forEach(function(x){v(x,'');});
-  v('c-data',TD);setModC('perna');showEl('c-resumo',false);showEl('ok-compra',false);showEl('err-compra',false);
+  TD=tdHoje();v('c-data',TD);setModC('perna');showEl('c-resumo',false);showEl('ok-compra',false);showEl('err-compra',false);
   limparCatPills('c');
   atualizarDatalist();abrirModal('modal-compra');
 }
@@ -202,7 +203,7 @@ function montarPillsVenda(){
 
 function abrirModalVenda(){
   ['v-data','v-comp','v-cab','v-refugo','v-arr','v-valarr','v-valtotal','v-frete','v-comissao','v-obs'].forEach(function(x){v(x,'');});
-  v('v-data',TD);setModV('perna');showEl('v-resumo',false);showEl('ok-venda',false);showEl('err-venda',false);
+  TD=tdHoje();v('v-data',TD);setModV('perna');showEl('v-resumo',false);showEl('ok-venda',false);showEl('err-venda',false);
   limparCatPills('v');montarPillsVenda();
   atualizarDatalist();abrirModal('modal-venda');
 }
@@ -215,11 +216,11 @@ function salvarCompra(){
   var r={id:Date.now(),dt:gel('c-data').value||TD,forn:(gel('c-forn').value||'').trim(),cat:cat,cab:cab,mod:modC,arr:n('c-arr'),valarr:n('c-valarr'),valcab:valorPorCab,valtotal:totalAnimais,frete:n('c-frete'),comissao:n('c-comissao'),obs:(gel('c-obs').value||'').trim()};
   r.custoTotal=totalAnimais+r.frete+r.comissao;
   // Salva na planilha primeiro
-  var dot=gel('sync-dot');dot.className='sdot sy';
+  var dot=gel('sync-dot');dot.className='sdot sy';toast('Salvando...',15000);
   enviarNuvemComConfirm('compra',r,function(ok){
     if(ok){
       S.compras.unshift(r);salvarLocal();
-      dot.className='sdot on';
+      dot.className='sdot on';toast('Salvo na planilha',1500);
       showEl('ok-compra',true);
       setTimeout(function(){fecharModal('modal-compra');rCompras();rHome();},1400);
     } else {
@@ -243,11 +244,11 @@ function salvarVenda(){
   var totalAnimais=valorPorCab*cab;
   var r={id:Date.now(),dt:gel('v-data').value||TD,comp:(gel('v-comp').value||'').trim(),cat:cat,cab:cab,refugo:n('v-refugo'),mod:modV,arr:n('v-arr'),valarr:n('v-valarr'),valcab:valorPorCab,valtotal:totalAnimais,frete:n('v-frete'),comissao:n('v-comissao'),obs:(gel('v-obs').value||'').trim()};
   r.recebidoLiq=totalAnimais-r.frete-r.comissao;
-  var dot=gel('sync-dot');dot.className='sdot sy';
+  var dot=gel('sync-dot');dot.className='sdot sy';toast('Salvando...',15000);
   enviarNuvemComConfirm('venda',r,function(ok){
     if(ok){
       S.vendas.unshift(r);salvarLocal();
-      dot.className='sdot on';
+      dot.className='sdot on';toast('Salvo na planilha',1500);
       showEl('ok-venda',true);
       setTimeout(function(){fecharModal('modal-venda');rVendas();rHome();},1400);
     } else {
@@ -335,11 +336,14 @@ function rHome(){
     var cpcCat=cabCat>0?investCat/cabCat:0;
     return a+(cpcCat*venda.cab);
   },0);
-  var lucro=(receb+totalComissoes)-cmvTotal;
+  // Mortes do periodo: prejuizo = custo da compra vinculada (regra combinada)
+  var mF=(S.mortes||[]).filter(function(r){var d=new Date(r.dt+'T00:00:00');return d>=f.de&&d<=f.ate;});
+  var prejMortes=mF.reduce(function(a,r){return a+(r.prejuizo||0);},0);
+  var lucro=(receb+totalComissoes)-cmvTotal-prejMortes;
   var margem=(receb+totalComissoes)>0?(lucro/(receb+totalComissoes)*100).toFixed(1):null;
   gel('d-invest').textContent=R$(invest);gel('d-invest-s').textContent=cF.length+' compra'+(cF.length!==1?'s':'');
   gel('d-receb').textContent=R$(receb);gel('d-receb-s').textContent=vF.length+' venda'+(vF.length!==1?'s':'');
-  gel('d-lucro').textContent=R$(lucro);gel('d-margem').textContent=margem?'Margem: '+margem+'%':'Margem: —';
+  gel('d-lucro').textContent=R$(lucro);gel('d-margem').textContent=(margem?'Margem: '+margem+'%':'Margem: —')+(prejMortes>0?' · mortes −'+R$(prejMortes):'');
   // Gado em mão (descontando mortes)
   var totC=S.compras.reduce(function(a,r){return a+r.cab;},0);
   var totV=S.vendas.reduce(function(a,r){return a+r.cab;},0);
@@ -604,7 +608,7 @@ function relFluxo(cF,vF,ps){
 /* ── Nuvem ── */
 /* ── Mortalidade ── */
 function abrirModalMorte(){
-  v('m-data',TD);
+  TD=tdHoje();v('m-data',TD);
   gel('m-cab').value='';
   gel('m-motivo').value='';
   gel('m-prejuizo').textContent='R$ 0,00';
@@ -670,6 +674,7 @@ function salvarMorte(){
   var dados=encodeURIComponent(JSON.stringify({tipo:'morte',reg:reg}));
   chamarGS('salvar',{data:dados},function(r){
     gel('sync-dot').className=r&&r.ok?'sdot on':'sdot off';
+    if(!(r&&r.ok)){reg._pendente=true;salvarLocal();}
   });
   fecharModal('modal-morte');
   rHome();
@@ -708,14 +713,14 @@ function rAcessos(lista){
 function chamarGS(acao,params,cb){
   if(!S.cfgGS)return;
   var cbN='_gcb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-  var t=setTimeout(function(){delete window[cbN];},12000);
-  window[cbN]=function(r){clearTimeout(t);delete window[cbN];if(cb)cb(r);};
+  var t=setTimeout(function(){window[cbN]=function(){};if(cb)cb(null);},15000);
+  window[cbN]=function(r){clearTimeout(t);window[cbN]=function(){};if(cb)cb(r);};
   var url=S.cfgGS+'?acao='+acao+'&callback='+cbN;
   Object.keys(params).forEach(function(k){url+='&'+k+'='+params[k];});
   url+='&t='+Date.now();
   var sc=document.createElement('script');
   sc.src=url;
-  sc.onerror=function(){clearTimeout(t);delete window[cbN];if(cb)cb(null);};
+  sc.onerror=function(){clearTimeout(t);window[cbN]=function(){};if(cb)cb(null);};
   document.body.appendChild(sc);
 }
 function enviarNuvem(tipo,reg){
@@ -730,16 +735,12 @@ function enviarNuvemComConfirm(tipo,reg,cb){
 }
 function sincronizarPendentes(){
   if(!S.cfgGS) return;
-  var pendentesC=S.compras.filter(function(r){return r._pendente;});
-  var pendentesV=S.vendas.filter(function(r){return r._pendente;});
-  if(!pendentesC.length&&!pendentesV.length) return;
-  pendentesC.forEach(function(r){
-    var dados=encodeURIComponent(JSON.stringify({tipo:'compra',reg:r}));
-    chamarGS('salvar',{data:dados},function(ok){if(ok){r._pendente=false;salvarLocal();}});
-  });
-  pendentesV.forEach(function(r){
-    var dados=encodeURIComponent(JSON.stringify({tipo:'venda',reg:r}));
-    chamarGS('salvar',{data:dados},function(ok){if(ok){r._pendente=false;salvarLocal();}});
+  [['compra',S.compras],['venda',S.vendas],['morte',S.mortes]].forEach(function(par){
+    par[1].filter(function(r){return r._pendente;}).forEach(function(r){
+      var reg=Object.assign({},r);delete reg._pendente;
+      var dados=encodeURIComponent(JSON.stringify({tipo:par[0],reg:reg}));
+      chamarGS('salvar',{data:dados},function(res){if(res&&res.ok){r._pendente=false;salvarLocal();var dot=gel('sync-dot');if(dot)dot.className='sdot on';}});
+    });
   });
 }
 function syncNuvem(cb){
@@ -752,7 +753,9 @@ function syncNuvem(cb){
       if(cb)cb();
       return;
     }
-    // Planilha é a fonte da verdade — substitui tudo
+    // Planilha é a fonte da verdade — substitui tudo,
+    // MAS guarda o que foi lançado sem internet e ainda não subiu
+    var _pend={compras:S.compras.filter(function(r){return r._pendente;}),vendas:S.vendas.filter(function(r){return r._pendente;}),mortes:S.mortes.filter(function(r){return r._pendente;})};
     S.compras=[];S.vendas=[];S.pessoas=[];S.mortes=[];
     if(d.compras&&d.compras.length){
       S.compras=d.compras.map(function(r){return{
@@ -813,9 +816,16 @@ function syncNuvem(cb){
       if(d.config.nomeEmpresa)S.cfgNome=d.config.nomeEmpresa;
       if(d.config.cfgGS)S.cfgGS=d.config.cfgGS;
     }
+    // devolve os pendentes: se a planilha já tem o mesmo ID, já subiu (não duplica)
+    var _faltam=0;
+    ['compras','vendas','mortes'].forEach(function(k){
+      var ids={};S[k].forEach(function(r){ids[String(r.id)]=1;});
+      _pend[k].forEach(function(r){if(ids[String(r.id)])return;S[k].unshift(r);_faltam++;});
+    });
     salvarLocal();
-    dot.className='sdot on';
-    toast('Dados atualizados!');
+    dot.className=_faltam?'sdot off':'sdot on';
+    toast(_faltam?'Dados atualizados · enviando '+_faltam+' lançamento(s) feito(s) sem internet':'Dados atualizados!',_faltam?3500:2200);
+    if(_faltam)sincronizarPendentes();
     if(cb)cb();
     else{rHome();rCompras();rVendas();rPessoas();atualizarDatalist();}
   });
@@ -830,5 +840,5 @@ var fc=gel('fab-c');if(fc)fc.classList.add('vis');
 // Sincronizar pendentes ao voltar online
 window.addEventListener('online',function(){
   toast('Conexão restaurada — sincronizando...',2500);
-  setTimeout(function(){sincronizarPendentes();syncNuvem();},1500);
+  setTimeout(function(){syncNuvem();},1500);
 });
