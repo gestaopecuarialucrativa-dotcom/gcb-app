@@ -168,8 +168,15 @@ function rComissoes(){
   lista.innerHTML=S.comissoes.map(function(c){
     return'<div class="neg-row"><div><div class="neg-l">'+(c.de||'—')+'</div>'
       +'<div class="neg-s">'+fmtD(c.dt)+' · '+c.cab+' cab. × '+R$(c.vpc)+'/cab</div></div>'
-      +'<div class="neg-v" style="color:#1B5E20">'+R$(c.total)+'</div></div>';
+      +'<div style="text-align:right"><div class="neg-v" style="color:#1B5E20">'+R$(c.total)+'</div>'
+      +'<button onclick="excluirComissao('+JSON.stringify(String(c.id)).replace(/"/g,'&quot;')+')" style="margin-top:4px;background:none;border:1px solid #e3c4c4;color:#B71C1C;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer">Excluir</button></div></div>';
   }).join('');
+}
+function excluirComissao(id){
+  var c=(S.comissoes||[]).filter(function(x){return String(x.id)===String(id);})[0];if(!c)return;
+  if(!confirm('Excluir a comissão de '+(c.de||'—')+' ('+R$(c.total)+')?'))return;
+  S.comissoes=S.comissoes.filter(function(x){return String(x.id)!==String(id);});
+  salvarLocal();rComissoes();rHome();toast('Comissão excluída');
 }
 
 function abrirModalCompra(){
